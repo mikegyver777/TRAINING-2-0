@@ -1043,9 +1043,20 @@
                             else if (ex.category === 'plyo') {
                                 html += `
                                     <p style="color: #aaa; margin: 3px 0;">Distance: ${ex.distance} ${ex.distanceUnit}</p>
-                                    <p style="color: #aaa; margin: 3px 0;">Contacts: ${ex.contacts}</p>
-                                    <p style="color: #aaa; margin: 3px 0;">RPE: ${ex.rpe}</p>
                                 `;
+                                
+                                if (ex.leftJumps !== undefined && ex.rightJumps !== undefined) {
+                                    // Single leg exercise
+                                    html += `
+                                        <p style="color: #aaa; margin: 3px 0;">Left leg: ${ex.leftJumps} jumps | Right leg: ${ex.rightJumps} jumps</p>
+                                        <p style="color: #aaa; margin: 3px 0;">Total contacts: ${ex.contacts}</p>
+                                    `;
+                                } else {
+                                    // Regular plyo exercise
+                                    html += `<p style="color: #aaa; margin: 3px 0;">Contacts: ${ex.contacts}</p>`;
+                                }
+                                
+                                html += `<p style="color: #aaa; margin: 3px 0;">RPE: ${ex.rpe}</p>`;
                             }
                             else if (ex.category === 'loaded') {
                                 html += `
@@ -1633,7 +1644,7 @@
                 `;
             }
             // Plyometrics
-            else if (['box-jump', 'depth-jump', 'broad-jump', 'bounding', 'single-leg-hop', 'lateral-bound', 'hurdle-hop', 'tuck-jump', 'pogo-hop', 'high-knees', 'skips'].includes(exerciseType)) {
+            else if (['box-jump', 'depth-jump', 'broad-jump', 'bounding', 'lateral-bound', 'hurdle-hop', 'tuck-jump', 'pogo-hop', 'high-knees', 'skips'].includes(exerciseType)) {
                 html = `
                     <div class="question">
                         <label>Distance/Location:</label>
@@ -1649,6 +1660,34 @@
                     <div class="question">
                         <label>Contacts per rep:</label>
                         <input type="number" class="contacts" placeholder="10">
+                    </div>
+                    <div class="question">
+                        <label>RPE:</label>
+                        <input type="number" class="rpe" step="0.5" min="6" max="10" placeholder="8.0">
+                    </div>
+                `;
+            }
+            // Single leg exercises - separate tracking
+            else if (exerciseType === 'single-leg-hop') {
+                html = `
+                    <div class="question">
+                        <label>Distance/Location:</label>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+                            <input type="number" class="distance-amount" placeholder="40">
+                            <select class="distance-unit">
+                                <option value="yards">Yards</option>
+                                <option value="meters">Meters</option>
+                                <option value="stairs">Stadium Stairs</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="question">
+                        <label>Left leg jumps:</label>
+                        <input type="number" class="left-jumps" placeholder="10">
+                    </div>
+                    <div class="question">
+                        <label>Right leg jumps:</label>
+                        <input type="number" class="right-jumps" placeholder="10">
                     </div>
                     <div class="question">
                         <label>RPE:</label>
@@ -2346,10 +2385,19 @@ DO NOT include any text outside the JSON object. Do not use markdown code blocks
                     exercise.rpe = parseFloat(fieldsDiv.querySelector('.rpe')?.value || 0);
                     exercise.category = 'sprint-loaded';
                 }
-                else if (['box-jump', 'depth-jump', 'broad-jump', 'bounding', 'single-leg-hop', 'lateral-bound', 'hurdle-hop', 'tuck-jump', 'pogo-hop', 'high-knees', 'skips'].includes(exerciseType)) {
+                else if (['box-jump', 'depth-jump', 'broad-jump', 'bounding', 'lateral-bound', 'hurdle-hop', 'tuck-jump', 'pogo-hop', 'high-knees', 'skips'].includes(exerciseType)) {
                     exercise.distance = parseFloat(fieldsDiv.querySelector('.distance-amount')?.value || 0);
                     exercise.distanceUnit = fieldsDiv.querySelector('.distance-unit')?.value || 'yards';
                     exercise.contacts = parseInt(fieldsDiv.querySelector('.contacts')?.value || 0);
+                    exercise.rpe = parseFloat(fieldsDiv.querySelector('.rpe')?.value || 0);
+                    exercise.category = 'plyo';
+                }
+                else if (exerciseType === 'single-leg-hop') {
+                    exercise.distance = parseFloat(fieldsDiv.querySelector('.distance-amount')?.value || 0);
+                    exercise.distanceUnit = fieldsDiv.querySelector('.distance-unit')?.value || 'yards';
+                    exercise.leftJumps = parseInt(fieldsDiv.querySelector('.left-jumps')?.value || 0);
+                    exercise.rightJumps = parseInt(fieldsDiv.querySelector('.right-jumps')?.value || 0);
+                    exercise.contacts = exercise.leftJumps + exercise.rightJumps; // Total
                     exercise.rpe = parseFloat(fieldsDiv.querySelector('.rpe')?.value || 0);
                     exercise.category = 'plyo';
                 }
